@@ -1,5 +1,7 @@
 #include "MyApplication.h"
 
+Application::Application() {}
+
 void Application::startup()
 {
 	Application::window = glfwCreateWindow(1280, 720, "Computer Graphics", nullptr, nullptr);
