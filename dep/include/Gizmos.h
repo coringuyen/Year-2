@@ -1,7 +1,11 @@
 #pragma once
 #define GLM_FORCE_PURE
 #include <glm/fwd.hpp>
-
+/*
+The Gizmo class works by allowing us to add geometric shapes and lines to it. We can then draw
+anything that has been added to it. The shapes remain until we call Gizmos::clear() which removes
+all shapes and lines, and we can add new ones.
+*/
 class Gizmos
 {
 public:
