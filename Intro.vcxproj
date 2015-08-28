@@ -67,11 +67,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\Dylan%27s Projects\Visual Studios C++\Year-2\MyApplication.cpp" />
     <ClCompile Include="downloads\aieutilities-master\aieutilities-master\aie\Gizmos.cpp" />
     <ClCompile Include="downloads\gl_core_4_4.c" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\Dylan%27s Projects\Visual Studios C++\Year-2\MyApplication.h" />
     <ClInclude Include="dep\include\Gizmos.h" />
     <ClInclude Include="downloads\gl_core_4_4.h" />
     <ClInclude Include="resource.h" />
