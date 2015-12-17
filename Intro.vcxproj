@@ -38,18 +38,20 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>C:\Users\dylan.guidry\Desktop\Year-2\dep;C:\Users\dylan.guidry\Desktop\Year-2\dep\glfw;C:\Users\dylan.guidry\Desktop\Year-2\dep\glm;C:\Users\dylan.guidry\Desktop\Year-2\dep\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\dylan.guidry\Desktop\Dylan%27s Projects\Visual Studios C++\Year-2\dep\include;C:\Users\dylan.guidry\Desktop\Dylan%27s Projects\Visual Studios C++\Year-2\dep;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\dylan.guidry\Desktop\Year-2\dep\glfw;C:\Users\dylan.guidry\Desktop\Year-2\dep\glm;C:\Users\dylan.guidry\Desktop\Dylan%27s Projects\Visual Studios C++\Year-2\dep\include;C:\Users\dylan.guidry\Desktop\Dylan%27s Projects\Visual Studios C++\Year-2\dep;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>opengl32.lib;glfw3.lib;legacy_stdio_definitions.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\Users\dylan.guidry\Desktop\Dylan%27s Projects\Visual Studios C++\Year-2\dep\glfw;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\Users\dylan.guidry\Desktop\Year-2\dep\glfw;C:\Users\dylan.guidry\Desktop\Year-2\dep\glm;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -67,15 +69,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\Dylan%27s Projects\Visual Studios C++\Year-2\MyApplication.cpp" />
     <ClCompile Include="downloads\aieutilities-master\aieutilities-master\aie\Gizmos.cpp" />
     <ClCompile Include="downloads\gl_core_4_4.c" />
+    <ClCompile Include="MyApplication.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\Dylan%27s Projects\Visual Studios C++\Year-2\MyApplication.h" />
     <ClInclude Include="dep\include\Gizmos.h" />
     <ClInclude Include="downloads\gl_core_4_4.h" />
+    <ClInclude Include="MyApplication.h" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
