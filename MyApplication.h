@@ -12,16 +12,18 @@ using glm::mat4;
 
 class Application
 {
-	int m_x = 0;
-	int m_y = 2;
-	GLFWwindow *window;
-	mat4 m_view = glm::lookAt(vec3(10, 10, 10), vec3(0), vec3(0, 1, 0));
-	mat4 m_projection = glm::perspective(glm::pi<float>()*0.25f, 16 / 9.f, 0.1f, 1000.f);
-public :
-	Application();
 
-	void startup();
-	void update();
+public :
+	Application();	
+	int startup();
+	int update();
 	void draw();
 	void shutdown();
+private:
+	int m_x;
+	int m_y;
+	GLFWwindow *window;
+	mat4 m_view;
+	mat4 m_projection;
+	
 };
