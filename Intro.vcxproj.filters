@@ -15,40 +15,40 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="downloads\gl_core_4_4.c">
+    <ClCompile Include="src\gl_core_4_4.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="downloads\aieutilities-master\aieutilities-master\aie\Gizmos.cpp">
+    <ClCompile Include="src\MyApplication.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source.cpp">
+    <ClCompile Include="src\Source.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MyApplication.cpp">
+    <ClCompile Include="src\test.cc">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="tiny_obj_loader.cpp">
+    <ClCompile Include="src\tiny_obj_loader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="test.cc">
+    <ClCompile Include="src\Gizmos.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="downloads\gl_core_4_4.h">
+    <ClInclude Include="dep\include\Gizmos.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="dep\include\Gizmos.h">
+    <ClInclude Include="dep\include\gl_core_4_4.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dep\include\MyApplication.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dep\include\test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dep\include\tiny_obj_loader.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="test.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MyApplication.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

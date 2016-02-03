@@ -105,11 +105,6 @@ int main()
 			theApp->shutdown();
 		}
 
-
-
-
-
-
 		delete theApp;
 	return 0;
 }

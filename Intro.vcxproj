@@ -10,6 +10,21 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\Gizmos.cpp" />
+    <ClCompile Include="src\gl_core_4_4.c" />
+    <ClCompile Include="src\MyApplication.cpp" />
+    <ClCompile Include="src\Source.cpp" />
+    <ClCompile Include="src\test.cc" />
+    <ClCompile Include="src\tiny_obj_loader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="dep\include\Gizmos.h" />
+    <ClInclude Include="dep\include\gl_core_4_4.h" />
+    <ClInclude Include="dep\include\MyApplication.h" />
+    <ClInclude Include="dep\include\test.h" />
+    <ClInclude Include="dep\include\tiny_obj_loader.h" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E1595987-9B83-4A7A-BE59-FBF49119FAFC}</ProjectGuid>
     <RootNamespace>Intro</RootNamespace>
@@ -68,21 +83,6 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="downloads\aieutilities-master\aieutilities-master\aie\Gizmos.cpp" />
-    <ClCompile Include="downloads\gl_core_4_4.c" />
-    <ClCompile Include="MyApplication.cpp" />
-    <ClCompile Include="Source.cpp" />
-    <ClCompile Include="test.cc" />
-    <ClCompile Include="tiny_obj_loader.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="dep\include\Gizmos.h" />
-    <ClInclude Include="dep\include\tiny_obj_loader.h" />
-    <ClInclude Include="downloads\gl_core_4_4.h" />
-    <ClInclude Include="MyApplication.h" />
-    <ClInclude Include="test.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
