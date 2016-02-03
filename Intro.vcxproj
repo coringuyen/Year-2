@@ -73,15 +73,15 @@
     <ClCompile Include="downloads\gl_core_4_4.c" />
     <ClCompile Include="MyApplication.cpp" />
     <ClCompile Include="Source.cpp" />
+    <ClCompile Include="test.cc" />
+    <ClCompile Include="tiny_obj_loader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dep\include\Gizmos.h" />
+    <ClInclude Include="dep\include\tiny_obj_loader.h" />
     <ClInclude Include="downloads\gl_core_4_4.h" />
     <ClInclude Include="MyApplication.h" />
-    <ClInclude Include="resource.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Intro.rc" />
+    <ClInclude Include="test.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
