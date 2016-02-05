@@ -1,4 +1,3 @@
-//#include "MyApplication.h" 
 #include <vector>
 #include "stdio.h"
 #include <gl_core_4_4.h>
@@ -16,32 +15,36 @@ using glm::mat4;
 struct Vertex { vec4 position; vec4 colour; };
 
 unsigned int m_VAO; 
-unsigned int  m_VBO; 
+unsigned int m_VBO; 
 unsigned int m_IBO;
 unsigned int m_programID;
-unsigned int m_shader;
 
 void generateGrid(unsigned int rows, unsigned int cols)
 {
+	mat4 m_view = glm::lookAt(vec3(10, 10, 10), vec3(0), vec3(0, 1, 0));
+	mat4 m_projection = glm::perspective(glm::pi<float>()*0.25f, 16 / 9.f, 0.1f, 1000.f);
+	mat4 m_projectionViewMatrix = m_projection * m_view;
+
 	Vertex* aoVertices = new Vertex[rows * cols];  
 	for (unsigned int r = 0; r < rows; ++r) 
 		for (unsigned int c = 0; c < cols; ++c) 
 		{
 			aoVertices[r * cols + c].position = vec4((float)c, 0, (float)r, 1);
-			// create some arbitrary colour based off something                  
-			// that might not be related to tiling a texture                 
+			               
 			vec3 colour = vec3( sinf( (c / (float)(cols - 1)) * ( r / (float)(rows - 1))) );       
-			aoVertices[ r * cols + c ].colour = vec4( colour, 1 );   
+			aoVertices[ r * cols + c ].colour = vec4( 1,1,1,1 );   
 		}
 
-	unsigned int* auiIndices = new unsigned int[(rows - 1) * (cols - 1) * 6];
-	unsigned int index = 0; for (unsigned int r = 0; r < (rows - 1); ++r) 
+	unsigned int *auiIndices = new unsigned int[(rows - 1) * (cols - 1) * 6];
+	unsigned int index = 0; 
+	for (unsigned int r = 0; r < (rows - 1); ++r) 
 		for (unsigned int c = 0; c < (cols - 1); ++c) 
 		{   
 			// triangle 1   
 			auiIndices[ index++ ] = r * cols + c;   
 			auiIndices[ index++ ] = (r + 1) * cols + c;   
-			auiIndices[ index++ ] = (r + 1) * cols + (c + 1);  
+			auiIndices[ index++ ] = (r + 1) * cols + (c + 1);
+
 			// triangle 2   
 			auiIndices[ index++ ] = r * cols + c;   
 			auiIndices[ index++ ] = (r + 1) * cols + (c + 1);   
@@ -50,11 +53,27 @@ void generateGrid(unsigned int rows, unsigned int cols)
 
 	glGenBuffers(1, &m_VBO); 
 	glGenBuffers(1, &m_IBO);
-	glGenVertexArrays(1, &m_VAO);
 
-	mat4 m_view = glm::lookAt(vec3(10, 10, 10), vec3(0), vec3(0, 1, 0));
-	mat4 m_projection = glm::perspective(glm::pi<float>()*0.25f, 16 / 9.f, 0.1f, 1000.f);
-	mat4 m_projectionViewMatrix = m_projection * m_view;
+	glGenVertexArrays(1, &m_VAO);
+	glBindVertexArray(m_VAO);	
+
+	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO);
+	glBufferData(GL_ARRAY_BUFFER, (rows * cols) * sizeof(Vertex), aoVertices, GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (rows - 1) * (cols - 1) * 6 * sizeof(unsigned int), auiIndices, GL_STATIC_DRAW); 
+
+	glEnableVertexAttribArray(0); 
+	glEnableVertexAttribArray(1); 
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0); 
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(vec4)));
+
+	glBindVertexArray(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glClearColor(0.25f, 0.25f, 0.25f, 1);
+	glEnable(GL_DEPTH_TEST);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glUseProgram(m_programID);
 	unsigned int projectionViewUniform = glGetUniformLocation(m_programID, "ProjectionView");
@@ -62,38 +81,30 @@ void generateGrid(unsigned int rows, unsigned int cols)
 
 	glBindVertexArray(m_VAO);
 	unsigned int indexCount = (rows - 1) * (cols - 1) * 6;
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);	
-
-	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO);
-	glBufferData(GL_ARRAY_BUFFER, (rows * cols) * sizeof(Vertex), aoVertices, GL_STATIC_DRAW);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (rows - 1) * (cols - 1) * 6 * sizeof(unsigned int), auiIndices, GL_STATIC_DRAW); 
-
-	glBindAttribLocation(0, m_shader, "Position");
-	glBindAttribLocation(1, m_shader, "Colour");
-
-	glEnableVertexAttribArray(0); 
-	glEnableVertexAttribArray(1); 
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0); 
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(vec4)));
-	
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 
-	glBindVertexArray(0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	// we’ll do more here soon!  
 	delete[] aoVertices; 
+	delete[] auiIndices;
 }
 
 void createShader()
 {
-	const char* vsSource = "#version 410\n \     layout(location=0) in vec4 Position; \     layout(location=1) in vec4 Colour; \     out vec4 vColour; \     uniform mat4 ProjectionView; \     void main() { vColour = Colour; gl_Position = ProjectionView * Position;}";
+	const char* vsSource =  "#version 410\n \
+							layout(location=0) in vec4 Position; \
+							layout(location=1) in vec4 Colour; \
+							out vec4 vColour; \
+							uniform mat4 ProjectionView; \
+							void main() { vColour = Colour; gl_Position = ProjectionView * Position; }";
 
-	const char* fsSource = "#version 410\n \     in vec4 vColour; \     out vec4 FragColor; \     void main() { FragColor = vColour; }";   
+	const char* fsSource = "#version 410\n \
+							in vec4 vColour; \
+							out vec4 FragColor; \
+							void main() { FragColor = vColour; }";
 
-	int success = GL_FALSE;  
+	 
 	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
@@ -105,9 +116,12 @@ void createShader()
 	m_programID = glCreateProgram(); 
 	glAttachShader(m_programID, vertexShader);
 	glAttachShader(m_programID, fragmentShader); 
-	glLinkProgram(m_programID);   
-	glGetProgramiv(m_programID, GL_LINK_STATUS, &success); 
+	glBindAttribLocation(0, m_programID, "Position");
+	glBindAttribLocation(1, m_programID, "Colour");
+	glLinkProgram(m_programID);  
 
+	int success = GL_FALSE; 
+	glGetProgramiv(m_programID, GL_LINK_STATUS, &success); 
 	if (success == GL_FALSE) 
 	{ 
 		int infoLogLength = 0;  
@@ -125,20 +139,66 @@ void createShader()
 	glDeleteShader(vertexShader);
 }
 
-void main()
-{
-	Application *theApp = new Application();
+//void main()
+//{
+//	Application *theApp = new Application();
+//
+//	if (theApp->startup() == true)
+//	{
+//		while (theApp->update() == true)
+//		{
+//			//theApp->draw();
+//			createShader();
+//			generateGrid(5, 5);
+//		}
+//		theApp->shutdown();
+//	}
+//
+//	delete theApp;
+//}
 
-	if (theApp->startup() == true)
+int main()
+{
+	if (glfwInit() == false)
+		return -1;
+
+	GLFWwindow *window = glfwCreateWindow(1280, 720, "Computer Graphics", nullptr, nullptr);
+
+	if (window == nullptr)
 	{
-		while (theApp->update() == true)
-		{
-			//theApp->draw();
-			createShader();
-			generateGrid(5, 5);
-		}
-		theApp->shutdown();
+		glfwTerminate();
+		return -2;
 	}
 
-	delete theApp;
+	glfwMakeContextCurrent(window);
+
+	//the rest of our code goes here!
+	if (ogl_LoadFunctions() == ogl_LOAD_FAILED)
+	{
+		glfwDestroyWindow(window);
+		glfwTerminate();
+		return -3;
+	}
+
+	//testing what version of OpenGL we are running
+	auto major = ogl_GetMajorVersion();
+	auto minor = ogl_GetMinorVersion();
+	printf_s("GL: %i.%i\n", major, minor);
+
+	createShader();
+	generateGrid(5, 5);
+
+
+	glfwSwapBuffers(window);
+	glfwPollEvents();
+
+	/*while (glfwWindowShouldClose(window) == false && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS)
+	{
+		
+	}*/
+
+	system("pause");
+	glfwDestroyWindow(window);
+	glfwTerminate();
+	return 0;
 }

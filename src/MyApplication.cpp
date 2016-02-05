@@ -64,7 +64,7 @@ void Application::draw()
 void Application::shutdown()
 {
 	std::printf("shutting down...");
-	Gizmos::destroy();
+	//Gizmos::destroy();
 	glfwDestroyWindow(window);
 	glfwTerminate();
 }
