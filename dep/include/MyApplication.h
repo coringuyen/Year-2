@@ -1,8 +1,8 @@
 #pragma once
 #include "stdio.h"
-#include <gl_core_4_4.h> 
-#include <GLFW/glfw3.h> 
+#include <gl_core_4_4.h>
 #include <Gizmos.h>
+#include <GLFW/glfw3.h> 
 #include <glm\glm.hpp>
 #include <glm\ext.hpp>
 

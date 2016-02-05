@@ -38,7 +38,7 @@ int Application::startup()
 
 int Application::update()
 {
-	Gizmos::create();
+	
 
 	while (glfwWindowShouldClose(window) == false && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS)
 	{
@@ -57,56 +57,6 @@ int Application::update()
 
 void Application::draw()
 {
-	Gizmos::clear();
-	Gizmos::addTransform(glm::mat4(1));
-
-	vec4 white(1);
-	vec4 black(0, 0, 0, 1);
-
-	for (int i = 0; i < 21; ++i)
-	{
-		Gizmos::addLine(vec3(-10 + i, 0, 10), 
-						vec3(-10 + i, 0, -10), 
-						i == 10 ? white : black);
-		 
-		Gizmos::addLine(vec3(10, 0, -10 + i), 
-						vec3(-10, 0, -10 + i), 
-						i == 10 ? white : black);
-	}
-
-	if (Application::m_x <= 0 && Application::m_y <= 0)
-	{
-		Application::m_x--;
-		Application::m_y++;
-	}
-	if (Application::m_x <= 0 && Application::m_y >= 0)
-	{
-		Application::m_x++;
-		Application::m_y++;
-	}
-	if (Application::m_y >= 0 && Application::m_x >= 0)
-	{
-		Application::m_y--;
-		Application::m_x++;
-	}
-	if (Application::m_y <= 0 && Application::m_x >= 0)
-	{
-		Application::m_y--;
-		Application::m_x--;
-	}
-	//sun
-	Gizmos::addSphere(vec3(0, 0, 0), 1.f, 10, 10, glm::vec4(1, .5, 0, 1));
-	//orbit ring
-	Gizmos::addArcRing(vec3(0, 0, 0), 0.f, 2.7f, 2.8f, 4.f, 100, glm::vec4(1), &glm::mat4(1.02));
-	Gizmos::addArcRing(vec3(0, 0, 0), 0.f, 2.7f, 2.8f, 4.f, 100, glm::vec4(1), &glm::mat4(2.02));
-	Gizmos::addArcRing(vec3(0, 0, 0), 0.f, 2.7f, 2.8f, 4.f, 100, glm::vec4(1), &glm::mat4(3.02));
-	//Mercury
-
-	Gizmos::addSphere(vec3(Application::m_x, 0, Application::m_y), .2f, 10, 10, glm::vec4(1, 0, 0, 1), &glm::mat4(1.5));
-	Gizmos::addSphere(vec3(Application::m_x * 2, 0, Application::m_y * 2), .2f, 10, 10, glm::vec4(1, 0, 0, 1), &glm::mat4(1.5));
-	Gizmos::addSphere(vec3(Application::m_x * 2.5, 0, Application::m_y*2.5), .2f, 10, 10, glm::vec4(1, 0, 0, 1), &glm::mat4(1.5)); 
-	Gizmos::draw(m_projection  * m_view);
-
 	glfwSwapBuffers(window);
 	glfwPollEvents();
 }
