@@ -18,6 +18,7 @@ unsigned int m_VAO;
 unsigned int m_VBO; 
 unsigned int m_IBO;
 unsigned int m_programID;
+GLFWwindow *window;
 
 void generateGrid(unsigned int rows, unsigned int cols)
 {
@@ -25,14 +26,14 @@ void generateGrid(unsigned int rows, unsigned int cols)
 	mat4 m_projection = glm::perspective(glm::pi<float>()*0.25f, 16 / 9.f, 0.1f, 1000.f);
 	mat4 m_projectionViewMatrix = m_projection * m_view;
 
-	Vertex* aoVertices = new Vertex[rows * cols];  
+	Vertex *aoVertices = new Vertex[rows * cols];  
 	for (unsigned int r = 0; r < rows; ++r) 
 		for (unsigned int c = 0; c < cols; ++c) 
 		{
 			aoVertices[r * cols + c].position = vec4((float)c, 0, (float)r, 1);
 			               
 			vec3 colour = vec3( sinf( (c / (float)(cols - 1)) * ( r / (float)(rows - 1))) );       
-			aoVertices[ r * cols + c ].colour = vec4( 1,1,1,1 );   
+			aoVertices[ r * cols + c ].colour = vec4( 1, 0.8f, 0.3f, 1 );   
 		}
 
 	unsigned int *auiIndices = new unsigned int[(rows - 1) * (cols - 1) * 6];
@@ -50,15 +51,18 @@ void generateGrid(unsigned int rows, unsigned int cols)
 			auiIndices[ index++ ] = (r + 1) * cols + (c + 1);   
 			auiIndices[ index++ ] = r * cols + (c + 1);  
 		}
-
+	// generate buffers with reference
 	glGenBuffers(1, &m_VBO); 
 	glGenBuffers(1, &m_IBO);
 
+	// generate array
 	glGenVertexArrays(1, &m_VAO);
 	glBindVertexArray(m_VAO);	
 
+	// put the buffers in the graphic card which is where the generate buffer had created
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO);
+	// how much space the array will be use
 	glBufferData(GL_ARRAY_BUFFER, (rows * cols) * sizeof(Vertex), aoVertices, GL_STATIC_DRAW);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (rows - 1) * (cols - 1) * 6 * sizeof(unsigned int), auiIndices, GL_STATIC_DRAW); 
 
@@ -67,6 +71,7 @@ void generateGrid(unsigned int rows, unsigned int cols)
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0); 
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(vec4)));
 
+	// unbind
 	glBindVertexArray(0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -139,30 +144,12 @@ void createShader()
 	glDeleteShader(vertexShader);
 }
 
-//void main()
-//{
-//	Application *theApp = new Application();
-//
-//	if (theApp->startup() == true)
-//	{
-//		while (theApp->update() == true)
-//		{
-//			//theApp->draw();
-//			createShader();
-//			generateGrid(5, 5);
-//		}
-//		theApp->shutdown();
-//	}
-//
-//	delete theApp;
-//}
-
-int main()
+int createWindow()
 {
 	if (glfwInit() == false)
 		return -1;
 
-	GLFWwindow *window = glfwCreateWindow(1280, 720, "Computer Graphics", nullptr, nullptr);
+	window = glfwCreateWindow(1280, 720, "Computer Graphics", nullptr, nullptr);
 
 	if (window == nullptr)
 	{
@@ -185,17 +172,35 @@ int main()
 	auto minor = ogl_GetMinorVersion();
 	printf_s("GL: %i.%i\n", major, minor);
 
-	createShader();
-	generateGrid(5, 5);
+	return 0;
+}
 
+//void main()
+//{
+//	Application *theApp = new Application();
+//
+//	if (theApp->startup() == true)
+//	{
+//		while (theApp->update() == true)
+//		{
+//			//theApp->draw();
+//			createShader();
+//			generateGrid(5, 5);
+//		}
+//		theApp->shutdown();
+//	}
+//
+//	delete theApp;
+//}
+
+int main()
+{
+	createWindow();
+	createShader();
+	generateGrid(4, 4);
 
 	glfwSwapBuffers(window);
 	glfwPollEvents();
-
-	/*while (glfwWindowShouldClose(window) == false && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS)
-	{
-		
-	}*/
 
 	system("pause");
 	glfwDestroyWindow(window);
