@@ -7,6 +7,10 @@
 #include <glm\ext.hpp>
 #include <iostream>
 #include "MyApplication.h"
+#include <iostream>
+#include <fstream>
+
+#include "tiny_obj_loader.h"
 
 using glm::vec3;
 using glm::vec4;
@@ -19,13 +23,20 @@ unsigned int m_VBO;
 unsigned int m_IBO;
 unsigned int m_programID;
 GLFWwindow *window;
+mat4 m_projectionViewMatrix;
+
+struct OpenGLInfo
+{
+	unsigned int m_VAO;
+	unsigned int m_VBO;
+	unsigned int m_IBO;
+	unsigned int m_index_count;
+};
+
+std::vector<OpenGLInfo> m_gl_info;
 
 void generateGrid(unsigned int rows, unsigned int cols)
 {
-	mat4 m_view = glm::lookAt(vec3(10, 10, 10), vec3(0), vec3(0, 1, 0));
-	mat4 m_projection = glm::perspective(glm::pi<float>()*0.25f, 16 / 9.f, 0.1f, 1000.f);
-	mat4 m_projectionViewMatrix = m_projection * m_view;
-
 	Vertex *aoVertices = new Vertex[rows * cols];  
 	for (unsigned int r = 0; r < rows; ++r) 
 		for (unsigned int c = 0; c < cols; ++c) 
@@ -68,8 +79,8 @@ void generateGrid(unsigned int rows, unsigned int cols)
 
 	glEnableVertexAttribArray(0); 
 	glEnableVertexAttribArray(1); 
-	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0); 
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(vec4)));
+	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(vec4)));  
 
 	// unbind
 	glBindVertexArray(0);
@@ -95,20 +106,37 @@ void generateGrid(unsigned int rows, unsigned int cols)
 	delete[] auiIndices;
 }
 
+std::string readFile(std::string path)
+{
+	std::string data;
+	std::string storeData;
+	std::ifstream file;
+
+	file.open(path);
+
+	if (file.is_open())
+	{
+		while (std::getline(file, data))
+		{
+			storeData = storeData + data + "\n";
+		}
+		file.close();
+	}
+	else
+	{
+		std::cout << "File not open" << std::endl;
+	}
+
+	return storeData;
+}
+
 void createShader()
 {
-	const char* vsSource =  "#version 410\n \
-							layout(location=0) in vec4 Position; \
-							layout(location=1) in vec4 Colour; \
-							out vec4 vColour; \
-							uniform mat4 ProjectionView; \
-							void main() { vColour = Colour; gl_Position = ProjectionView * Position; }";
+	std::string VertexShader = readFile("VertexShader.txt");
+	std::string FragmentShader = readFile("FragmentShader.txt");
 
-	const char* fsSource = "#version 410\n \
-							in vec4 vColour; \
-							out vec4 FragColor; \
-							void main() { FragColor = vColour; }";
-
+	const char* vsSource = VertexShader.c_str();
+	const char* fsSource = FragmentShader.c_str();
 	 
 	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -172,7 +200,73 @@ int createWindow()
 	auto minor = ogl_GetMinorVersion();
 	printf_s("GL: %i.%i\n", major, minor);
 
+	mat4 m_view = glm::lookAt(vec3(10, 6, 40), vec3(0), vec3(0, 1, 0));
+	mat4 m_projection = glm::perspective(glm::pi<float>()*0.25f, 16 / 9.f, 0.1f, 1000.f);
+	m_projectionViewMatrix = m_projection * m_view;
+
 	return 0;
+}
+
+void createOpenGLBuffers(std::vector<tinyobj::shape_t> &shapes)
+{
+	m_gl_info.resize(shapes.size());
+
+	for (unsigned int mesh_index = 0; mesh_index < shapes.size(); ++mesh_index)
+	{
+		glGenVertexArrays(1, &m_gl_info[mesh_index].m_VAO);
+		glGenBuffers(1, &m_gl_info[mesh_index].m_VBO);
+		glGenBuffers(1, &m_gl_info[mesh_index].m_IBO);
+		glBindVertexArray(m_gl_info[mesh_index].m_VAO);
+
+		unsigned int float_count = shapes[mesh_index].mesh.positions.size();
+		float_count += shapes[mesh_index].mesh.normals.size();
+		float_count += shapes[mesh_index].mesh.texcoords.size();
+
+		std::vector<float> vertex_data;
+		vertex_data.reserve(float_count);
+
+		vertex_data.insert(vertex_data.end(),
+			shapes[mesh_index].mesh.positions.begin(),
+			shapes[mesh_index].mesh.positions.end());
+
+		vertex_data.insert(vertex_data.end(),
+			shapes[mesh_index].mesh.normals.begin(),
+			shapes[mesh_index].mesh.normals.end());
+
+		m_gl_info[mesh_index].m_index_count =
+			shapes[mesh_index].mesh.indices.size();
+
+		glBindBuffer(GL_ARRAY_BUFFER, m_gl_info[mesh_index].m_VBO);
+		glBufferData(GL_ARRAY_BUFFER,
+			vertex_data.size() * sizeof(float),
+			vertex_data.data(), GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_gl_info[mesh_index].m_IBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+			shapes[mesh_index].mesh.indices.size() * sizeof(unsigned int),
+			shapes[mesh_index].mesh.indices.data(), GL_STATIC_DRAW);
+
+		glEnableVertexAttribArray(0); //position
+		glEnableVertexAttribArray(1); //normal data
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, 0,
+			(void*)(sizeof(float)*shapes[mesh_index].mesh.positions.size()));
+
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		
+	}
+
+	glUseProgram(m_programID);
+	int view_proj_uniform = glGetUniformLocation(m_programID, "ProjectionView");
+	glUniformMatrix4fv(view_proj_uniform, 1, GL_FALSE, glm::value_ptr(m_projectionViewMatrix));
+
+	for (unsigned int i = 0; i < m_gl_info.size(); ++i)
+	{
+		glBindVertexArray(m_gl_info[i].m_VAO);
+		glDrawElements(GL_TRIANGLES, m_gl_info[i].m_index_count, GL_UNSIGNED_INT, 0);
+	}
 }
 
 //void main()
@@ -195,14 +289,34 @@ int createWindow()
 
 int main()
 {
+	std::vector<tinyobj::shape_t> shapes;
+	std::vector<tinyobj::material_t> materials;
+	std::string err;
+	tinyobj::LoadObj(shapes, materials, err, "./models/buddha.obj");
+
 	createWindow();
 	createShader();
-	generateGrid(4, 4);
+
+	/*createOpenGLBuffers(shapes);
+	glfwSwapBuffers(window);
+	glfwPollEvents();*/
+
+
+	/*while (glfwWindowShouldClose(window) == false && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS)
+	{*///}	
+
+	glClearColor(0.25f, 0.25f, 0.25f, 1);
+	glEnable(GL_DEPTH_TEST);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	//generateGrid(4, 4);
+
+	createOpenGLBuffers(shapes);
 
 	glfwSwapBuffers(window);
 	glfwPollEvents();
+	
 
-	system("pause");
+	system("Pause");
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;
