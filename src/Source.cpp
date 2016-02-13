@@ -22,8 +22,11 @@ unsigned int m_VAO;
 unsigned int m_VBO; 
 unsigned int m_IBO;
 unsigned int m_programID;
+
 GLFWwindow *window;
 mat4 m_projectionViewMatrix;
+mat4 m_modelMatrix;
+unsigned int indexCount;
 
 struct OpenGLInfo
 {
@@ -37,6 +40,8 @@ std::vector<OpenGLInfo> m_gl_info;
 
 void generateGrid(unsigned int rows, unsigned int cols)
 {
+	indexCount = (rows - 1) * (cols - 1) * 6;
+
 	Vertex *aoVertices = new Vertex[rows * cols];  
 	for (unsigned int r = 0; r < rows; ++r) 
 		for (unsigned int c = 0; c < cols; ++c) 
@@ -87,23 +92,37 @@ void generateGrid(unsigned int rows, unsigned int cols)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	glClearColor(0.25f, 0.25f, 0.25f, 1);
-	glEnable(GL_DEPTH_TEST);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glUseProgram(m_programID);
-	unsigned int projectionViewUniform = glGetUniformLocation(m_programID, "ProjectionView");
-	glUniformMatrix4fv(projectionViewUniform, 1, false, glm::value_ptr(m_projectionViewMatrix));
-
-	glBindVertexArray(m_VAO);
-	unsigned int indexCount = (rows - 1) * (cols - 1) * 6;
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
-
-
 	// we’ll do more here soon!  
 	delete[] aoVertices; 
 	delete[] auiIndices;
+}
+
+void drawGrid()
+{
+	glUseProgram(m_programID);
+	unsigned int projectionViewUniform = glGetUniformLocation(m_programID, "ProjectionView");
+	unsigned int modelUniform = glGetUniformLocation(m_programID, "Model");
+	glUniformMatrix4fv(projectionViewUniform, 1, false, glm::value_ptr(m_projectionViewMatrix));
+	glUniformMatrix4fv(modelUniform, 1, false, glm::value_ptr(m_modelMatrix));
+
+	glBindVertexArray(m_VAO);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+}
+
+void drawOBJ()
+{
+	glUseProgram(m_programID);
+	int projectionViewUniform = glGetUniformLocation(m_programID, "ProjectionView");
+	unsigned int modelUniform = glGetUniformLocation(m_programID, "Model");
+	glUniformMatrix4fv(projectionViewUniform, 1, GL_FALSE, glm::value_ptr(m_projectionViewMatrix));
+	glUniformMatrix4fv(modelUniform, 1, false, glm::value_ptr(m_modelMatrix));
+
+	for (unsigned int i = 0; i < m_gl_info.size(); ++i)
+	{
+		glBindVertexArray(m_gl_info[i].m_VAO);
+		glDrawElements(GL_TRIANGLES, m_gl_info[i].m_index_count, GL_UNSIGNED_INT, 0);
+	}
 }
 
 std::string readFile(std::string path)
@@ -200,9 +219,10 @@ int createWindow()
 	auto minor = ogl_GetMinorVersion();
 	printf_s("GL: %i.%i\n", major, minor);
 
-	mat4 m_view = glm::lookAt(vec3(10, 6, 40), vec3(0), vec3(0, 1, 0));
+	mat4 m_view = glm::lookAt(vec3(4, 4, 30), vec3(0), vec3(0, 1, 0));
 	mat4 m_projection = glm::perspective(glm::pi<float>()*0.25f, 16 / 9.f, 0.1f, 1000.f);
 	m_projectionViewMatrix = m_projection * m_view;
+ 
 
 	return 0;
 }
@@ -257,16 +277,6 @@ void createOpenGLBuffers(std::vector<tinyobj::shape_t> &shapes)
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		
 	}
-
-	glUseProgram(m_programID);
-	int view_proj_uniform = glGetUniformLocation(m_programID, "ProjectionView");
-	glUniformMatrix4fv(view_proj_uniform, 1, GL_FALSE, glm::value_ptr(m_projectionViewMatrix));
-
-	for (unsigned int i = 0; i < m_gl_info.size(); ++i)
-	{
-		glBindVertexArray(m_gl_info[i].m_VAO);
-		glDrawElements(GL_TRIANGLES, m_gl_info[i].m_index_count, GL_UNSIGNED_INT, 0);
-	}
 }
 
 //void main()
@@ -287,6 +297,7 @@ void createOpenGLBuffers(std::vector<tinyobj::shape_t> &shapes)
 //	delete theApp;
 //}
 
+
 int main()
 {
 	std::vector<tinyobj::shape_t> shapes;
@@ -296,27 +307,41 @@ int main()
 
 	createWindow();
 	createShader();
-
-	/*createOpenGLBuffers(shapes);
-	glfwSwapBuffers(window);
-	glfwPollEvents();*/
-
-
-	/*while (glfwWindowShouldClose(window) == false && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS)
-	{*///}	
-
-	glClearColor(0.25f, 0.25f, 0.25f, 1);
-	glEnable(GL_DEPTH_TEST);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	//generateGrid(4, 4);
-
 	createOpenGLBuffers(shapes);
 
-	glfwSwapBuffers(window);
-	glfwPollEvents();
+	while (glfwWindowShouldClose(window) == false && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS)
+	{	
+		glClearColor(0.25f, 0.25f, 0.25f, 1);
+		glEnable(GL_DEPTH_TEST);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
+		if (glfwGetKey(window, GLFW_KEY_A))
+			m_modelMatrix = glm::translate(m_modelMatrix, vec3(-1, 0, 0));
 
-	system("Pause");
+		if (glfwGetKey(window, GLFW_KEY_D))
+			m_modelMatrix = glm::translate(m_modelMatrix, vec3(1, 0, 0));
+
+		if (glfwGetKey(window, GLFW_KEY_W))
+			m_modelMatrix = glm::translate(m_modelMatrix, vec3(0, 1, 0));
+
+		if (glfwGetKey(window, GLFW_KEY_S))
+			m_modelMatrix = glm::translate(m_modelMatrix, vec3(0, -1, 0));
+
+		if (glfwGetKey(window, GLFW_KEY_Q))
+			m_modelMatrix *= glm::rotate(0.1f, vec3(0, -1, 0));
+
+		if (glfwGetKey(window, GLFW_KEY_E))
+			m_modelMatrix *= glm::rotate(0.1f, vec3(0, 1, 0));
+			
+		//drawGrid();
+		drawOBJ();
+
+		glfwSwapBuffers(window);
+		glfwPollEvents();
+	
+	}
+
 	glfwDestroyWindow(window);
 	glfwTerminate();
 	return 0;

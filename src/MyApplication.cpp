@@ -33,13 +33,11 @@ int Application::startup()
 	auto minor = ogl_GetMinorVersion();
 	printf_s("GL: %i.%i\n", major, minor);
 
-	return 1;
+	return 0;
 }
 
 int Application::update()
 {
-	
-
 	while (glfwWindowShouldClose(window) == false && glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS)
 	{
 		// our game logic and update code goes here!
@@ -51,6 +49,7 @@ int Application::update()
 		//GL_DEPTH_BUFFER_BIT clear the distance to the closest pixel. We do this that openGL loads are new images from frame to fram
 		return 1;
 	}
+
 	return 0;
 
 }
