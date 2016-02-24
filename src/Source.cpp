@@ -17,7 +17,7 @@ using glm::vec3;
 using glm::vec4;
 using glm::mat4;
 
-struct Vertex { vec4 position; vec4 colour;  vec2 texcoord; };
+struct Vertex { vec4 position; vec2 texcoord; };
 
 unsigned int m_VAO; 
 unsigned int m_VBO; 
@@ -52,25 +52,25 @@ void generateGrid(unsigned int rows, unsigned int cols)
 	for (unsigned int r = 0; r < rows; ++r)
 		for (unsigned int c = 0; c < cols; ++c)
 		{
-			aoVertices[r * cols + c].position = vec4((float)c, 0, (float)r, 1);
+			aoVertices[r * cols + c].position = vec4((float)c , 0, (float)r, 1);
 
-			float amplitude = 1.f;
-			float persistence = 0.3f;
-			perlin_data[c * cols + r] = 0;
+			//float amplitude = 1.f;
+			//float persistence = 0.3f;
+			//perlin_data[c * cols + r] = 0;
 
-			for (int o = 0; o < octaves; ++o)
-			{
-				float freg = powf(2, (float)o);
-				float perlin_sample = glm::perlin(vec2((float)r, (float)c) * scale * freg) * 0.5f + 0.5f;
-				perlin_data[c * cols + r] += perlin_sample * amplitude;
-				amplitude *= persistence;
-			}
+			//for (int o = 0; o < octaves; ++o)
+			//{
+			//	float freg = powf(2, (float)o);
+			//	float perlin_sample = glm::perlin(vec2((float)r, (float)c) * scale * freg) * 0.5f + 0.5f;
+			//	perlin_data[c * cols + r] += perlin_sample * amplitude;
+			//	amplitude *= persistence;
+			//}
 			// generate noise
-			//perlin_data[c * cols + r] = glm::perlin(vec2((float)r, (float)c) * scale) * 0.5f + 0.5f;
+			perlin_data[c * cols + r] = glm::perlin(vec2((float)r, (float)c) * scale) * 0.5f + 0.5f;
 
-			vec3 colour = vec3( sinf((perlin_data[c * cols + r])));
-			aoVertices[ r * cols + c ].colour = vec4(colour, 1);
-			//aoVertices[r * cols + c].texcoord = vec2(1,1);
+			vec2 colour = vec2(sinf(perlin_data[c * cols + r]));
+			//aoVertices[ r * cols + c ].colour = vec4(colour, 1);
+			aoVertices[r * cols + c].texcoord = vec2(colour);
 		}
 
 	unsigned int *auiIndices = new unsigned int[(rows - 1) * (cols - 1) * 6];
@@ -112,8 +112,8 @@ void generateGrid(unsigned int rows, unsigned int cols)
 	glEnableVertexAttribArray(0); 
 	glEnableVertexAttribArray(1); 
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(vec4)));
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(float) * 2));
+	//glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(vec4)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(vec4)));
 
 	//glGenerateMipmap(GL_TEXTURE_2D);
 	// unbind
@@ -123,11 +123,15 @@ void generateGrid(unsigned int rows, unsigned int cols)
 
 	glGenTextures(1, &m_perlin_texture);
 	glBindTexture(GL_TEXTURE_2D, m_perlin_texture);
+
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_R32F, rows, cols, 0, GL_RED, GL_FLOAT, perlin_data);
+
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// we’ll do more here soon!  
 	delete[] aoVertices; 
@@ -142,16 +146,20 @@ void drawGrid()
 	unsigned int projectionViewUniform = glGetUniformLocation(m_programID, "ProjectionView");
 	unsigned int modelUniform = glGetUniformLocation(m_programID, "Model");
 	unsigned int texture = glGetUniformLocation(m_programID, "perlin_texture");
+	unsigned int scaleHeight = glGetUniformLocation(m_programID, "scaleHeight");
 	
 	glUniformMatrix4fv(projectionViewUniform, 1, false, glm::value_ptr(m_projectionViewMatrix));
 	glUniformMatrix4fv(modelUniform, 1, false, glm::value_ptr(m_modelMatrix));
 	glUniform1i(texture, 0);
+	glUniform1f(scaleHeight, 10.f);
 
 	glBindVertexArray(m_VAO);
+	glBindTexture(GL_TEXTURE_2D, m_perlin_texture);
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 
 	glBindVertexArray(0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 	glUseProgram(0);
 }
 
@@ -197,12 +205,12 @@ std::string readFile(std::string path)
 void createShader()
 {
 	std::string VertexShader = readFile("VertexShader.txt");
-	std::string FragmentShader = readFile("FragmentShader.txt");
-	//std::string TextureFragmentShader = readFile("TextureFragmentShader.txt");
+	//std::string FragmentShader = readFile("FragmentShader.txt");
+	std::string TextureFragmentShader = readFile("TextureFragmentShader.txt");
 
 	const char* vsSource = VertexShader.c_str();
-	const char* fsSource = FragmentShader.c_str();
-	//const char* fsSource = TextureFragmentShader.c_str();
+	//const char* fsSource = FragmentShader.c_str();
+	const char* fsSource = TextureFragmentShader.c_str();
 	 
 	unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
 	unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -216,8 +224,8 @@ void createShader()
 	glAttachShader(m_programID, vertexShader);
 	glAttachShader(m_programID, fragmentShader); 
 	glBindAttribLocation(0, m_programID, "Position");
-	glBindAttribLocation(1, m_programID, "Colour");
-	glBindAttribLocation(2, m_programID, "texcoord");
+	//glBindAttribLocation(1, m_programID, "Colour");
+	glBindAttribLocation(1, m_programID, "texcoord");
 	glLinkProgram(m_programID);  
 
 	int success = GL_FALSE; 
