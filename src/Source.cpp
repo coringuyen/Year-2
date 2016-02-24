@@ -52,25 +52,27 @@ void generateGrid(unsigned int rows, unsigned int cols)
 	for (unsigned int r = 0; r < rows; ++r)
 		for (unsigned int c = 0; c < cols; ++c)
 		{
-			aoVertices[r * cols + c].position = vec4((float)c , 0, (float)r, 1);
+			//aoVertices[r * cols + c].position = vec4((float)c , 0, (float)r, 1);
+			aoVertices[r * cols + c].position = vec4(c - cols * 0.5f, 0, r - rows * 0.5f, 1);
+			
+			float amplitude = 1.f;
+			float persistence = 0.3f;
+			perlin_data[c * cols + r] = 0;
 
-			//float amplitude = 1.f;
-			//float persistence = 0.3f;
-			//perlin_data[c * cols + r] = 0;
+			for (int o = 0; o < octaves; ++o)
+			{
+				float freg = powf(2, (float)o);
+				float perlin_sample = glm::perlin(vec2((float)r, (float)c) * scale * freg) * 0.5f + 0.5f;
+				perlin_data[c * cols + r] += perlin_sample * amplitude;
+				amplitude *= persistence;
+			}
 
-			//for (int o = 0; o < octaves; ++o)
-			//{
-			//	float freg = powf(2, (float)o);
-			//	float perlin_sample = glm::perlin(vec2((float)r, (float)c) * scale * freg) * 0.5f + 0.5f;
-			//	perlin_data[c * cols + r] += perlin_sample * amplitude;
-			//	amplitude *= persistence;
-			//}
 			// generate noise
-			perlin_data[c * cols + r] = glm::perlin(vec2((float)r, (float)c) * scale) * 0.5f + 0.5f;
+			//perlin_data[c * cols + r] = glm::perlin(vec2((float)r, (float)c) * scale) * 0.5f + 0.5f;
 
-			vec2 colour = vec2(sinf(perlin_data[c * cols + r]));
+			//vec2 colour = vec2(sinf(perlin_data[c * cols + r]));
 			//aoVertices[ r * cols + c ].colour = vec4(colour, 1);
-			aoVertices[r * cols + c].texcoord = vec2(colour);
+			aoVertices[r * cols + c].texcoord = vec2(c * (1.f / cols), r * (1.f / rows));
 		}
 
 	unsigned int *auiIndices = new unsigned int[(rows - 1) * (cols - 1) * 6];
@@ -89,7 +91,6 @@ void generateGrid(unsigned int rows, unsigned int cols)
 			auiIndices[index++] = r * cols + (c + 1);
 		}
 
-
 	// generate array
 	glGenVertexArrays(1, &m_VAO);
 	glBindVertexArray(m_VAO);
@@ -97,25 +98,20 @@ void generateGrid(unsigned int rows, unsigned int cols)
 	// generate buffers with reference
 	glGenBuffers(1, &m_VBO); 
 	glGenBuffers(1, &m_IBO);
-	
 
 	// put the buffers in the graphic card which is where the generate buffer had created
 	glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IBO);
-	
 
-	// how much space the array will be use
+	// how much space the array will need to be
 	glBufferData(GL_ARRAY_BUFFER, (rows * cols) * sizeof(Vertex), aoVertices, GL_STATIC_DRAW);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (rows - 1) * (cols - 1) * 6 * sizeof(unsigned int), auiIndices, GL_STATIC_DRAW); 
-	
 
-	glEnableVertexAttribArray(0); 
-	glEnableVertexAttribArray(1); 
+	glEnableVertexAttribArray(0); // position
+	glEnableVertexAttribArray(1); // texcoord
 	glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);
-	//glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(vec4)));
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(sizeof(vec4)));
 
-	//glGenerateMipmap(GL_TEXTURE_2D);
 	// unbind
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -275,7 +271,7 @@ int createWindow()
 	auto minor = ogl_GetMinorVersion();
 	printf_s("GL: %i.%i\n", major, minor);
 
-	mat4 m_view = glm::lookAt(vec3(100, 40, 100), vec3(0), vec3(0, 1, 0));
+	mat4 m_view = glm::lookAt(vec3(60, 60, 60), vec3(0), vec3(0, 1, 0));
 	mat4 m_projection = glm::perspective(glm::pi<float>()*0.25f, 16 / 9.f, 0.1f, 1000.f);
 	m_projectionViewMatrix = m_projection * m_view;
 
@@ -340,25 +336,52 @@ void createOpenGLBuffers(std::vector<tinyobj::shape_t> &shapes)
 //
 //	if (theApp->startup() == true)
 //	{
+//		createShader();
+//		generateGrid(5, 5);
 //		while (theApp->update() == true)
 //		{
-//			//theApp->draw();
-//			createShader();
-//			generateGrid(5, 5);
+//			drawGrid(theApp->m_projectionViewMatrix);
+//			theApp->draw();
 //		}
+//		system("pause");
 //		theApp->shutdown();
 //	}
 //
 //	delete theApp;
 //}
 
+void controlInput()
+{
+	if (glfwGetKey(window, GLFW_KEY_A))
+		m_modelMatrix = glm::translate(m_modelMatrix, vec3(-1, 0, 0));
+
+	if (glfwGetKey(window, GLFW_KEY_D))
+		m_modelMatrix = glm::translate(m_modelMatrix, vec3(1, 0, 0));
+
+	if (glfwGetKey(window, GLFW_KEY_W))
+		m_modelMatrix = glm::translate(m_modelMatrix, vec3(0, 1, 0));
+
+	if (glfwGetKey(window, GLFW_KEY_S))
+		m_modelMatrix = glm::translate(m_modelMatrix, vec3(0, -1, 0));
+
+	if (glfwGetKey(window, GLFW_KEY_Q))
+		m_modelMatrix *= glm::rotate(0.1f, vec3(0, -1, 0));
+
+	if (glfwGetKey(window, GLFW_KEY_E))
+		m_modelMatrix *= glm::rotate(0.1f, vec3(0, 1, 0));
+}
+void destroy()
+{
+	glfwDestroyWindow(window);
+	glfwTerminate();
+}
 
 int main()
 {
 	std::vector<tinyobj::shape_t> shapes;
 	std::vector<tinyobj::material_t> materials;
 	std::string err;
-	// load Info
+	//load Info of the object
 	//tinyobj::LoadObj(shapes, materials, err, "./models/bunny.obj");
 
 	createWindow();
@@ -372,35 +395,15 @@ int main()
 		glClearColor(0.25f, 0.25f, 0.25f, 1);
 		glEnable(GL_DEPTH_TEST);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-
-		//if (glfwGetKey(window, GLFW_KEY_A))
-		//	m_modelMatrix = glm::translate(m_modelMatrix, vec3(-1, 0, 0));
-
-		//if (glfwGetKey(window, GLFW_KEY_D))
-		//	m_modelMatrix = glm::translate(m_modelMatrix, vec3(1, 0, 0));
-
-		//if (glfwGetKey(window, GLFW_KEY_W))
-		//	m_modelMatrix = glm::translate(m_modelMatrix, vec3(0, 1, 0));
-
-		//if (glfwGetKey(window, GLFW_KEY_S))
-		//	m_modelMatrix = glm::translate(m_modelMatrix, vec3(0, -1, 0));
-
-		//if (glfwGetKey(window, GLFW_KEY_Q))
-		//	m_modelMatrix *= glm::rotate(0.1f, vec3(0, -1, 0));
-
-		//if (glfwGetKey(window, GLFW_KEY_E))
-		//	m_modelMatrix *= glm::rotate(0.1f, vec3(0, 1, 0));
-			
+		
+		//controlInput();
 		drawGrid();
 		//drawOBJ();
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
-	
 	}
 
-	glfwDestroyWindow(window);
-	glfwTerminate();
+	destroy();
 	return 0;
 }

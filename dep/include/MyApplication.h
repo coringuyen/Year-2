@@ -19,6 +19,8 @@ public :
 	int update();
 	void draw();
 	void shutdown();
+
+	mat4 m_projectionViewMatrix;
 private:
 	int m_x;
 	int m_y;
